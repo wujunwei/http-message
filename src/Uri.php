@@ -224,10 +224,10 @@ class Uri implements UriInterface
      */
     public function withScheme($scheme = '')
     {
-        $scheme = strtolower(trim($scheme));
         if (!is_string($scheme) || !in_array($scheme, static::SUPPORT_PROTOCOL)){
             throw new \InvalidArgumentException('Invalid or unsupported schemes.');
         }
+        $scheme = strtolower(trim($scheme));
         if ($scheme === ''){
             unset( $this->uri['scheme']);
         }else{
@@ -274,10 +274,10 @@ class Uri implements UriInterface
      */
     public function withHost($host)
     {
-        $host = strtolower(trim($host));
         if (!is_string($host)){
             throw new \InvalidArgumentException('Invalid  host.');
         }
+        $host = strtolower(trim($host));
         if ($host === ''){
             unset( $this->uri['host']);
         }else{
@@ -380,7 +380,15 @@ class Uri implements UriInterface
      */
     public function withFragment($fragment)
     {
-        // TODO: Implement withFragment() method.
+        if (!is_string($fragment)){
+            throw new \InvalidArgumentException('Invalid  fragment.');
+        }
+        if ($fragment === ''){
+            unset( $this->uri['fragment']);
+        }else{
+            $this->uri['fragment'] = $fragment;
+        }
+        return $this;
     }
 
     /**
