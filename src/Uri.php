@@ -19,7 +19,7 @@ class Uri implements UriInterface
     const MAX_PORT = 65535;
     /**
      * Uri constructor.
-     * @param string $uri
+     * @param null|string $uri
      */
     public function __construct($uri = '')
     {
