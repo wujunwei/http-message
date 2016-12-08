@@ -14,7 +14,9 @@ use Psr\Http\Message\UriInterface;
 class Uri implements UriInterface
 {
     private $uri;
-    private $protocol = ['http', 'https', 'smtp', 'ftp'];
+    const SUPPORT_PROTOCOL = ['http', 'https', 'smtp', 'ftp'];
+    const MIN_PORT = 0;
+    const MAX_PORT = 65535;
     /**
      * Uri constructor.
      * @param string $uri
@@ -22,9 +24,6 @@ class Uri implements UriInterface
     public function __construct($uri = '')
     {
         $this->uri = [];
-        if (!empty($uri)) {
-            $this->dealUri($uri);
-        }
     }
 
     private function dealUri($uri)
@@ -226,8 +225,8 @@ class Uri implements UriInterface
     public function withScheme($scheme = '')
     {
         $scheme = strtolower(trim($scheme));
-        if (!is_string($scheme) || !in_array($scheme, $this->protocol)){
-            throw new \InvalidArgumentException('invalid or unsupported schemes.');
+        if (!is_string($scheme) || !in_array($scheme, static::SUPPORT_PROTOCOL)){
+            throw new \InvalidArgumentException('Invalid or unsupported schemes.');
         }
         if ($scheme === ''){
             unset( $this->uri['scheme']);
@@ -275,7 +274,16 @@ class Uri implements UriInterface
      */
     public function withHost($host)
     {
-        // TODO: Implement withHost() method.
+        $host = strtolower(trim($host));
+        if (!is_string($host)){
+            throw new \InvalidArgumentException('Invalid  host.');
+        }
+        if ($host === ''){
+            unset( $this->uri['host']);
+        }else{
+            $this->uri['host'] = $host;
+        }
+        return $this;
     }
 
     /**
@@ -297,7 +305,16 @@ class Uri implements UriInterface
      */
     public function withPort($port)
     {
-        // TODO: Implement withPort() method.
+        if (is_null($port)){
+            unset($this->uri['port']);
+            return $this;
+        }
+        if(preg_match("/^[0-9]+$/",$port) && static::MIN_PORT < $port && $port < static::MAX_PORT) {
+            $this->uri['port'] = (int)$port;
+        }else{
+            throw new \InvalidArgumentException('Invalid ports.');
+        }
+        return $this;
     }
 
     /**
