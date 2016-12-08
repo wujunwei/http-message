@@ -158,7 +158,8 @@ class Uri implements UriInterface
      */
     public function getPath()
     {
-        return isset($this->uri['path'])? $this->uri['path'] : '';
+
+        return isset($this->uri['path'])? $this->encodeUrl($this->uri['path']) : '';
     }
 
     /**
@@ -183,7 +184,7 @@ class Uri implements UriInterface
      */
     public function getQuery()
     {
-        return isset($this->uri['query'])? $this->uri['query'] : '';
+        return isset($this->uri['query'])? $this->encodeUrl($this->uri['query']) : '';
     }
 
     /**
@@ -204,7 +205,16 @@ class Uri implements UriInterface
      */
     public function getFragment()
     {
-        return isset($this->uri['fragment'])? $this->uri['fragment'] : '';
+        return isset($this->uri['fragment'])? $this->encodeUrl($this->uri['fragment']) : '';
+    }
+
+    private function encodeUrl($data = '')
+    {
+        if ($data === rawurldecode($data)){
+            return rawurlencode($data);
+        }else{
+            return $data;
+        }
     }
 
     /**
@@ -341,7 +351,11 @@ class Uri implements UriInterface
      */
     public function withPath($path)
     {
-        // TODO: Implement withPath() method.
+        if(!is_string($path)){
+            throw new \InvalidArgumentException('Invalid paths');
+        }
+        $this->uri['path'] = $path;
+        return $this;
     }
 
     /**
@@ -361,7 +375,15 @@ class Uri implements UriInterface
      */
     public function withQuery($query)
     {
-        // TODO: Implement withQuery() method.
+        if (!is_string($query)){
+            throw new \InvalidArgumentException('Invalid  query.');
+        }
+        if ($query === ''){
+            unset( $this->uri['query']);
+        }else{
+            $this->uri['query'] = $query;
+        }
+        return $this;
     }
 
     /**
