@@ -1,0 +1,22 @@
+{
+    "name": "firstw/http-message",
+    "description": "Common tool for HTTP messages",
+    "type": "library",
+    "require-dev": {
+        "psr/http-message": "^1.0"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "adam123",
+            "email": "wjw3323@live.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Http\\Message\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "require": {}
+}
