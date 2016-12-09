@@ -16,7 +16,10 @@ class Stream implements StreamInterface
 
     private $stream;
     private $size;
+    private $uri;
     private $seekable;
+    private $writable;
+    private $readable;
     private $metaData;
 
     /** @var array Hash of readable and writable stream types */
@@ -34,9 +37,24 @@ class Stream implements StreamInterface
             'x+t' => true, 'c+t' => true, 'a' => true, 'a+' => true
         ]
     ];
-    public function __construct($stream, $opinion = [])
-    {
 
+    /**
+     * Stream constructor.
+     * @param resource $stream
+     */
+    public function __construct($stream)
+    {
+        if (!is_resource($stream)){
+            throw new \InvalidArgumentException('Input stream must be a resource');
+        }
+        $this->stream = $stream;
+        $this->metaData = stream_get_meta_data($stream);
+        $this->uri = $this->metaData['uri'];
+        $this->seekable = boolval($this->metaData['seekable']);
+        $this->readable = isset(self::$readWriteHash['read'][$this->metaData['mode']]);
+        $this->writable = isset(self::$readWriteHash['write'][$this->metaData['mode']]);
+        $stat = fstat($stream);
+        $this->size = (int)$stat['size'];
     }
 
     public function __destruct()
@@ -82,7 +100,15 @@ class Stream implements StreamInterface
      */
     public function detach()
     {
-        // TODO: Implement detach() method.
+        if (!isset($this->stream)) {
+            return null;
+        }
+        $result = $this->stream;
+        unset($this->stream);
+        $this->size = $this->uri = null;
+        $this->readable = $this->writable = $this->seekable = false;
+
+        return $result;
     }
 
     /**
@@ -92,7 +118,23 @@ class Stream implements StreamInterface
      */
     public function getSize()
     {
-        // TODO: Implement getSize() method.
+        if ($this->size !== null) {
+            return $this->size;
+        }
+        if (!isset($this->stream)) {
+            return null;
+        }
+        // Clear the stat cache if the stream has a URI
+        if ($this->uri) {
+            clearstatcache(true, $this->uri);
+        }
+        $stats = fstat($this->stream);
+        if (isset($stats['size'])) {
+            $this->size = $stats['size'];
+            return $this->size;
+        }
+
+        return null;
     }
 
     /**
@@ -105,6 +147,8 @@ class Stream implements StreamInterface
     {
         if (!is_null($this->stream)){
             return ftell($this->stream);
+        }else{
+            throw new \RuntimeException("Can' t read position from nul resource");
         }
     }
 
@@ -115,7 +159,7 @@ class Stream implements StreamInterface
      */
     public function eof()
     {
-        // TODO: Implement eof() method.
+        return is_null($this->stream) || feof($this->stream);
     }
 
     /**
@@ -125,7 +169,7 @@ class Stream implements StreamInterface
      */
     public function isSeekable()
     {
-        // TODO: Implement isSeekable() method.
+        return !is_null($this->stream) && $this->seekable;
     }
 
     /**
@@ -142,7 +186,12 @@ class Stream implements StreamInterface
      */
     public function seek($offset, $whence = SEEK_SET)
     {
-        // TODO: Implement seek() method.
+        if (!$this->seekable){
+            throw new \RuntimeException('The resource is not seekable');
+        }
+        if(fseek($this->stream, $offset, $whence) === -1){
+            throw new \RuntimeException(var_export($whence, true));
+        }
     }
 
     /**
@@ -171,7 +220,7 @@ class Stream implements StreamInterface
      */
     public function isWritable()
     {
-        // TODO: Implement isWritable() method.
+        return !is_null($this->stream) && $this->writable;
     }
 
     /**
@@ -183,7 +232,16 @@ class Stream implements StreamInterface
      */
     public function write($string)
     {
-        // TODO: Implement write() method.
+        if (is_null($this->stream || $this->isWritable())){
+            throw new \RuntimeException("Can't write  resource");
+        }else{
+            $this->size = null;
+            $result = fwrite($this->stream, $string);
+            if ($result === false){
+                throw new \RuntimeException("Can't write it");
+            }
+            return $result;
+        }
     }
 
     /**
@@ -193,7 +251,7 @@ class Stream implements StreamInterface
      */
     public function isReadable()
     {
-        // TODO: Implement isReadable() method.
+        return !is_null($this->stream) && $this->readable;
     }
 
     /**
@@ -208,7 +266,19 @@ class Stream implements StreamInterface
      */
     public function read($length)
     {
-        // TODO: Implement read() method.
+        if (is_null($this->stream || $this->isReadable())){
+            throw new \RuntimeException("Can't read resource");
+        }else{
+            if ($this->eof()){
+                return '';
+            }
+            $this->size = null;
+            $result = fread($this->stream, $length);
+            if ($result === false){
+                throw new \RuntimeException("Can't read resource");
+            }
+            return $result;
+        }
     }
 
     /**
@@ -220,7 +290,11 @@ class Stream implements StreamInterface
      */
     public function getContents()
     {
-        // TODO: Implement getContents() method.
+        $contents = stream_get_contents($this->stream);
+        if ($contents === false) {
+            throw new \RuntimeException('Unable to read stream contents');
+        }
+        return $contents;
     }
 
     /**
