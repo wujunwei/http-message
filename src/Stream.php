@@ -57,6 +57,9 @@ class Stream implements StreamInterface
         $this->size = (int)$stat['size'];
     }
 
+    /**
+     * close stream
+     */
     public function __destruct()
     {
         $this->close();
@@ -78,7 +81,16 @@ class Stream implements StreamInterface
      */
     public function __toString()
     {
-        // TODO: Implement __toString() method.
+        if (is_null($this->stream)){
+            return '';
+        }
+
+        try{
+            $this->rewind();
+            return $this->getContents();
+        }catch (\Exception $e){
+            return '';
+        }
     }
 
     /**
@@ -311,6 +323,17 @@ class Stream implements StreamInterface
      */
     public function getMetadata($key = null)
     {
-        // TODO: Implement getMetadata() method.
+        if (is_null($this->stream)){
+            return null;
+        }
+        if (!isset($this->metaData)){
+            $this->metaData = stream_get_meta_data($this->stream);
+        }
+
+        if($key === null){
+            return $this->metaData;
+        }else{
+            return isset($this->metaData[$key])? $this->metaData[$key]: null;
+        }
     }
 }
