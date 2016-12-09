@@ -13,7 +13,14 @@ use Psr\Http\Message\UriInterface;
 
 class Uri implements UriInterface
 {
-    private $uri;
+    private $scheme;
+    private $authority;
+    private $userInfo;
+    private $host;
+    private $port;
+    private $path;
+    private $query;
+    private $fragment;
     const SUPPORT_PROTOCOL = ['http' => 80, 'https' => 443, 'smtp' => 25, 'ftp' => 21, 'ssh' => 22, 'telnet' => 23];
     const MIN_PORT = 0;
     const MAX_PORT = 65535;
@@ -23,7 +30,7 @@ class Uri implements UriInterface
      */
     public function __construct()
     {
-        $this->uri = [];
+
     }
 
     /**
@@ -42,7 +49,7 @@ class Uri implements UriInterface
      */
     public function getScheme()
     {
-        return isset($this->uri['scheme'])? $this->uri['scheme'] : '';
+        return isset($this->scheme)? $this->scheme : '';
     }
 
     /**
@@ -65,7 +72,7 @@ class Uri implements UriInterface
      */
     public function getAuthority()
     {
-        return isset($this->uri['authority'])? $this->uri['authority'] : '';
+        return isset($this->authority)? $this->authority : '';
     }
 
     /**
@@ -85,7 +92,7 @@ class Uri implements UriInterface
      */
     public function getUserInfo()
     {
-        return isset($this->uri['user_info'])? $this->uri['user_info'] : '';
+        return isset($this->userInfo)? $this->userInfo : '';
     }
 
     /**
@@ -101,7 +108,7 @@ class Uri implements UriInterface
      */
     public function getHost()
     {
-        return isset($this->uri['host'])? $this->uri['host'] : '';
+        return isset($this->host)? $this->host : '';
     }
 
     /**
@@ -121,8 +128,8 @@ class Uri implements UriInterface
      */
     public function getPort()
     {
-        $port = isset($this->uri['port'])? (int)$this->uri['port']: null;
-       if(isset($this->uri['scheme']) && static::SUPPORT_PROTOCOL[$this->uri['scheme']] == $port){
+        $port = isset($this->port)? (int)$this->port: null;
+       if(isset($this->scheme) && static::SUPPORT_PROTOCOL[$this->scheme] == $port){
            $port = null;
        }
     }
@@ -154,7 +161,7 @@ class Uri implements UriInterface
      */
     public function getPath()
     {
-        return isset($this->uri['path'])? $this->encodeUrl($this->uri['path']) : '';
+        return isset($this->path)? $this->encodeUrl($this->path) : '';
     }
 
     /**
@@ -179,7 +186,7 @@ class Uri implements UriInterface
      */
     public function getQuery()
     {
-        return isset($this->uri['query'])? $this->encodeUrl($this->uri['query']) : '';
+        return isset($this->query)? $this->encodeUrl($this->query) : '';
     }
 
     /**
@@ -200,7 +207,7 @@ class Uri implements UriInterface
      */
     public function getFragment()
     {
-        return isset($this->uri['fragment'])? $this->encodeUrl($this->uri['fragment']) : '';
+        return isset($this->fragment)? $this->encodeUrl($this->fragment) : '';
     }
 
     private function encodeUrl($data = '')
@@ -230,14 +237,18 @@ class Uri implements UriInterface
     public function withScheme($scheme = '')
     {
         $scheme = strtolower(trim($scheme));
+        if($scheme === $this->scheme){
+            return $this;
+        }
+        $new = clone $this;
         if ($scheme === ''){
-            unset( $this->uri['scheme']);
+            unset( $new->scheme);
         }elseif (!is_string($scheme) || !key_exists($scheme, static::SUPPORT_PROTOCOL)){
             throw new \InvalidArgumentException('Invalid or unsupported schemes.');
         }else {
-            $this->uri['scheme'] = $scheme;
+            $new->scheme = $scheme;
         }
-        return $this;
+        return $new;
     }
 
     /**
@@ -256,12 +267,14 @@ class Uri implements UriInterface
      */
     public function withUserInfo($user, $password = null)
     {
+
+        $new = clone $this;
         if ($user === ''){
-            unset($this->uri['user_info']);
+            unset($new->userInfo);
         }else{
-            $this->uri['user_info'] = $user.(is_null($password) ?  '': ':'.$password);
+            $new->userInfo = $user.(is_null($password) ?  '': ':'.$password);
         }
-        return $this;
+        return $new;
     }
 
     /**
@@ -282,12 +295,17 @@ class Uri implements UriInterface
             throw new \InvalidArgumentException('Invalid  host.');
         }
         $host = strtolower(trim($host));
-        if ($host === ''){
-            unset( $this->uri['host']);
-        }else{
-            $this->uri['host'] = $host;
+        if ($this->host === $host){
+            return $this;
         }
-        return $this;
+
+        $new = clone $this;
+        if ($host === ''){
+            unset( $new->host);
+        }else{
+            $new->host = $host;
+        }
+        return $new;
     }
 
     /**
@@ -309,14 +327,19 @@ class Uri implements UriInterface
      */
     public function withPort($port)
     {
+        if ($this->port === $port){
+            return $this;
+        }
+
+        $new = clone $this;
         if (is_null($port)){
-            unset($this->uri['port']);
+            unset($new->port);
         }else if(preg_match("/^[0-9]+$/",$port) && static::MIN_PORT < $port && $port < static::MAX_PORT) {
-            $this->uri['port'] = (int)$port;
+            $new->port = (int)$port;
         }else{
             throw new \InvalidArgumentException('Invalid ports.');
         }
-        return $this;
+        return $new;
     }
 
     /**
@@ -346,8 +369,13 @@ class Uri implements UriInterface
         if(!is_string($path)){
             throw new \InvalidArgumentException('Invalid paths');
         }
-        $this->uri['path'] = $path;
-        return $this;
+        if ($this->path === $path){
+            return $this;
+        }
+
+        $new = clone $this;
+        $new->path = $path;
+        return $new;
     }
 
     /**
@@ -370,12 +398,18 @@ class Uri implements UriInterface
         if (!is_string($query)){
             throw new \InvalidArgumentException('Invalid  query.');
         }
-        if ($query === ''){
-            unset( $this->uri['query']);
-        }else{
-            $this->uri['query'] = $query;
+
+        if($this->query === $query){
+            return $this;
         }
-        return $this;
+
+        $new = clone $this;
+        if ($query === ''){
+            unset( $new->query);
+        }else{
+            $new->query = $query;
+        }
+        return $new;
     }
 
     /**
@@ -398,9 +432,9 @@ class Uri implements UriInterface
             throw new \InvalidArgumentException('Invalid  fragment.');
         }
         if ($fragment === ''){
-            unset( $this->uri['fragment']);
+            unset( $this->fragment);
         }else{
-            $this->uri['fragment'] = $fragment;
+            $this->fragment = $fragment;
         }
         return $this;
     }
@@ -430,6 +464,49 @@ class Uri implements UriInterface
      */
     public function __toString()
     {
-        // TODO: Implement __toString() method.
+        return $this->createUri($this->scheme, $this->authority, $this->userInfo, $this->host, $this->path, $this->query, $this->fragment);
+    }
+
+    /**
+     * @param string $scheme
+     * @param string $authority
+     * @param string $userInfo
+     * @param string $host
+     * @param string $path
+     * @param string $query
+     * @param string $fragment
+     * @return string
+     */
+    public static function createUri($scheme, $authority, $path, $query, $fragment)
+    {
+        $uri = '';
+        if ($scheme != '') {
+            $uri .= $scheme . ':';
+        }
+        if ($authority != '') {
+            $uri .= '//' . $authority;
+        }
+        if ($path != '') {
+            if ($path[0] !== '/') {
+                if ($authority != '') {
+                    // If the path is rootless and an authority is present, the path MUST be prefixed by "/"
+                    $path = '/' . $path;
+                }
+            } elseif (isset($path[1]) && $path[1] === '/') {
+                if ($authority == '') {
+                    // If the path is starting with more than one "/" and no authority is present, the
+                    // starting slashes MUST be reduced to one.
+                    $path = '/' . ltrim($path, '/');
+                }
+            }
+            $uri .= $path;
+        }
+        if ($query != '') {
+            $uri .= '?' . $query;
+        }
+        if ($fragment != '') {
+            $uri .= '#' . $fragment;
+        }
+        return $uri;
     }
 }

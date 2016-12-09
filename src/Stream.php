@@ -14,6 +14,36 @@ use Psr\Http\Message\StreamInterface;
 class Stream implements StreamInterface
 {
 
+    private $stream;
+    private $size;
+    private $seekable;
+    private $metaData;
+
+    /** @var array Hash of readable and writable stream types */
+    private static $readWriteHash = [
+        'read' => [
+            'r' => true, 'w+' => true, 'r+' => true, 'x+' => true, 'c+' => true,
+            'rb' => true, 'w+b' => true, 'r+b' => true, 'x+b' => true,
+            'c+b' => true, 'rt' => true, 'w+t' => true, 'r+t' => true,
+            'x+t' => true, 'c+t' => true, 'a+' => true
+        ],
+        'write' => [
+            'w' => true, 'w+' => true, 'rw' => true, 'r+' => true, 'x+' => true,
+            'c+' => true, 'wb' => true, 'w+b' => true, 'r+b' => true,
+            'x+b' => true, 'c+b' => true, 'w+t' => true, 'r+t' => true,
+            'x+t' => true, 'c+t' => true, 'a' => true, 'a+' => true
+        ]
+    ];
+    public function __construct($stream, $opinion = [])
+    {
+
+    }
+
+    public function __destruct()
+    {
+        $this->close();
+    }
+
     /**
      * Reads all data from the stream into a string, from the beginning to end.
      *
@@ -40,7 +70,7 @@ class Stream implements StreamInterface
      */
     public function close()
     {
-        // TODO: Implement close() method.
+        fclose($this->stream);
     }
 
     /**
@@ -73,7 +103,9 @@ class Stream implements StreamInterface
      */
     public function tell()
     {
-        // TODO: Implement tell() method.
+        if (!is_null($this->stream)){
+            return ftell($this->stream);
+        }
     }
 
     /**
@@ -125,7 +157,11 @@ class Stream implements StreamInterface
      */
     public function rewind()
     {
-        // TODO: Implement rewind() method.
+        if ($this->isSeekable()){
+            $this->seek(0);
+        }else{
+            throw new \RuntimeException('Seek failure');
+        }
     }
 
     /**
