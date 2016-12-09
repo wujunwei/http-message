@@ -14,23 +14,16 @@ use Psr\Http\Message\UriInterface;
 class Uri implements UriInterface
 {
     private $uri;
-    const SUPPORT_PROTOCOL = ['http', 'https', 'smtp', 'ftp'];
+    const SUPPORT_PROTOCOL = ['http' => 80, 'https' => 443, 'smtp' => 25, 'ftp' => 21, 'ssh' => 22, 'telnet' => 23];
     const MIN_PORT = 0;
     const MAX_PORT = 65535;
+
     /**
      * Uri constructor.
-     * @param null|string $uri
      */
-    public function __construct($uri = '')
+    public function __construct()
     {
         $this->uri = [];
-    }
-
-    private function dealUri($uri)
-    {
-        $uri_arr = parse_url(ltrim($uri));
-        $this->uri['host'] = strtolower($uri_arr['host']);
-        $this->uri['scheme'] = strtolower($uri_arr['scheme']);
     }
 
     /**
@@ -128,7 +121,10 @@ class Uri implements UriInterface
      */
     public function getPort()
     {
-        return isset($this->uri['port'])? (int)$this->uri['port'] : null;
+        $port = isset($this->uri['port'])? (int)$this->uri['port']: null;
+       if(isset($this->uri['scheme']) && static::SUPPORT_PROTOCOL[$this->uri['scheme']] == $port){
+           $port = null;
+       }
     }
 
     /**
@@ -158,7 +154,6 @@ class Uri implements UriInterface
      */
     public function getPath()
     {
-
         return isset($this->uri['path'])? $this->encodeUrl($this->uri['path']) : '';
     }
 
@@ -234,13 +229,12 @@ class Uri implements UriInterface
      */
     public function withScheme($scheme = '')
     {
-        if (!is_string($scheme) || !in_array($scheme, static::SUPPORT_PROTOCOL)){
-            throw new \InvalidArgumentException('Invalid or unsupported schemes.');
-        }
         $scheme = strtolower(trim($scheme));
         if ($scheme === ''){
             unset( $this->uri['scheme']);
-        }else{
+        }elseif (!is_string($scheme) || !key_exists($scheme, static::SUPPORT_PROTOCOL)){
+            throw new \InvalidArgumentException('Invalid or unsupported schemes.');
+        }else {
             $this->uri['scheme'] = $scheme;
         }
         return $this;
@@ -317,9 +311,7 @@ class Uri implements UriInterface
     {
         if (is_null($port)){
             unset($this->uri['port']);
-            return $this;
-        }
-        if(preg_match("/^[0-9]+$/",$port) && static::MIN_PORT < $port && $port < static::MAX_PORT) {
+        }else if(preg_match("/^[0-9]+$/",$port) && static::MIN_PORT < $port && $port < static::MAX_PORT) {
             $this->uri['port'] = (int)$port;
         }else{
             throw new \InvalidArgumentException('Invalid ports.');
