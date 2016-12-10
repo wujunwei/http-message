@@ -464,7 +464,7 @@ class Uri implements UriInterface
      */
     public function __toString()
     {
-        return $this->createUri($this->scheme, $this->authority, $this->userInfo, $this->host, $this->path, $this->query, $this->fragment);
+        return $this->createUri($this->scheme, $this->authority, $this->path, $this->query, $this->fragment);
     }
 
     /**

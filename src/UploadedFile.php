@@ -8,12 +8,40 @@
 
 namespace Http\Message;
 
-
+use Http\Message\Stream;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 
 class UploadedFile implements UploadedFileInterface
 {
+
+    private $filePath;
+    private $size;
+    private $error;
+    private $name;
+    private $type;
+    private $stream;
+    private $isMoved;
+    /**
+     * UploadedFile constructor.
+     * @param array $files
+     */
+    public function __construct(array $files)
+    {
+        if (!is_array($files)){
+            throw new \RuntimeException('Null file');
+        }
+        $this->error =$files['error'];
+        if ($this->error !== UPLOAD_ERR_OK){
+            $this->filePath = $this->size = $this->name = $this->type = $this->stream = null;
+        }
+
+        $this->filePath = is_null($files['tmp_name'])? null: $files['tmp_name'];
+        $this->stream = is_null($this->filePath)? null: new Stream(fopen($this->filePath, ''));
+        $this->size = is_null($files['size'])? null: (int)$files['size'];
+        $this->type  = is_null($files['type'])? null: $files['type'];
+        $this->isMoved = false;
+    }
 
     /**
      * Retrieve a stream representing the uploaded file.
@@ -33,7 +61,11 @@ class UploadedFile implements UploadedFileInterface
      */
     public function getStream()
     {
-        // TODO: Implement getStream() method.
+        if (is_null($this->stream) || $this->isMoved){
+            throw new \RuntimeException('no stream is available or can be created.');
+        }else{
+            return $this->stream;
+        }
     }
 
     /**
@@ -70,7 +102,19 @@ class UploadedFile implements UploadedFileInterface
      */
     public function moveTo($targetPath)
     {
-        // TODO: Implement moveTo() method.
+
+        if ($this->isMoved){
+            throw new \RuntimeException('The file has been moved once');
+        }
+
+        if (!is_uploaded_file($this->filePath)){
+            throw new \RuntimeException('The file could\'t be null');
+        }elseif(!move_uploaded_file($this->filePath, $targetPath)) {
+            throw new \InvalidArgumentException("targetPath specified is invalid");
+        }
+        $this->isMoved = true;
+        $this->filePath = $targetPath;
+
     }
 
     /**
@@ -84,7 +128,7 @@ class UploadedFile implements UploadedFileInterface
      */
     public function getSize()
     {
-        // TODO: Implement getSize() method.
+        return $this->size;
     }
 
     /**
@@ -103,7 +147,7 @@ class UploadedFile implements UploadedFileInterface
      */
     public function getError()
     {
-        // TODO: Implement getError() method.
+        return $this->error;
     }
 
     /**
@@ -121,7 +165,7 @@ class UploadedFile implements UploadedFileInterface
      */
     public function getClientFilename()
     {
-        // TODO: Implement getClientFilename() method.
+        return $this->name;
     }
 
     /**
@@ -139,6 +183,6 @@ class UploadedFile implements UploadedFileInterface
      */
     public function getClientMediaType()
     {
-        // TODO: Implement getClientMediaType() method.
+        return $this->type;
     }
 }
