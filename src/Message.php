@@ -12,9 +12,18 @@ namespace Http\Message;
 use Psr\Http\Message\MessageInterface;
 use Psr\Http\Message\StreamInterface;
 
+
 class Message implements MessageInterface
 {
     private $proVersion;
+    private $headers;
+    private $body;
+
+    public function __construct(array $headers = [], $proVersion = '1.0')
+    {
+        $this->headers = $headers;
+        $this->proVersion = $proVersion;
+    }
 
     /**
      * Retrieves the HTTP protocol version as a string.
@@ -25,7 +34,7 @@ class Message implements MessageInterface
      */
     public function getProtocolVersion()
     {
-        // TODO: Implement getProtocolVersion() method.
+        return $this->proVersion;
     }
 
     /**
@@ -41,9 +50,14 @@ class Message implements MessageInterface
      * @param string $version HTTP protocol version
      * @return static
      */
-    public function withProtocolVersion($version)
+    public function withProtocolVersion($version = '1.0')
     {
-        // TODO: Implement withProtocolVersion() method.
+        if ($version ===$this->proVersion){
+            return $this;
+        }
+        $new = clone $this;
+        $new->proVersion = $version;
+        return $new;
     }
 
     /**
@@ -73,7 +87,7 @@ class Message implements MessageInterface
      */
     public function getHeaders()
     {
-        // TODO: Implement getHeaders() method.
+        return $this->headers;
     }
 
     /**
@@ -86,7 +100,10 @@ class Message implements MessageInterface
      */
     public function hasHeader($name)
     {
-        // TODO: Implement hasHeader() method.
+        if (is_null($this->headers) || !isset($this->headers[$name])){
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -105,7 +122,7 @@ class Message implements MessageInterface
      */
     public function getHeader($name)
     {
-        // TODO: Implement getHeader() method.
+        return isset($this->headers[$name])? $this->headers[$name]: [];
     }
 
     /**
@@ -129,7 +146,11 @@ class Message implements MessageInterface
      */
     public function getHeaderLine($name)
     {
-        // TODO: Implement getHeaderLine() method.
+        if (isset($this->headers[$name])){
+            return join(',', $this->headers[$name]);
+        }else{
+            return '';
+        }
     }
 
     /**
@@ -140,7 +161,7 @@ class Message implements MessageInterface
      *
      * This method MUST be implemented in such a way as to retain the
      * immutability of the message, and MUST return an instance that has the
-     * new and/or updated header and value.
+     * new and/or updated header and value.preserved
      *
      * @param string $name Case-insensitive header field name.
      * @param string|string[] $value Header value(s).
@@ -149,7 +170,17 @@ class Message implements MessageInterface
      */
     public function withHeader($name, $value)
     {
-        // TODO: Implement withHeader() method.
+        if (!is_string($name) || !is_string($value)){
+            throw new \InvalidArgumentException('Invalid header names or values.');
+        }
+        $value = is_array($value)? $value: [$value];
+        if (!isset($this->headers[$name]) || $value === $this->headers[$name]){
+            return $this;
+        }else{
+            $new = clone $this;
+            $new->headers[$name] = $value;
+            return $new;
+        }
     }
 
     /**
@@ -170,7 +201,20 @@ class Message implements MessageInterface
      */
     public function withAddedHeader($name, $value)
     {
-        // TODO: Implement withAddedHeader() method.
+        if (!is_string($name) || !is_string($value)){
+            throw new \InvalidArgumentException('Invalid header names or values.');
+        }
+        $values = isset($this->headers[$name])? $this->headers[$name]: [];
+        $value = is_array($value)? $value: [$value];
+        $values = $values + $value;
+
+        if (!isset($this->headers[$name]) || $values === $this->headers[$name]){
+            return $this;
+        }else{
+            $new = clone $this;
+            $new->headers[$name] = $values;
+            return $new;
+        }
     }
 
     /**
@@ -187,7 +231,13 @@ class Message implements MessageInterface
      */
     public function withoutHeader($name)
     {
-        // TODO: Implement withoutHeader() method.
+        if (!isset($this->headers[$name])){
+            return $this;
+        }else{
+            $new = clone $this;
+            unset($new->headers[$name]);
+            return $new;
+        }
     }
 
     /**
@@ -197,7 +247,7 @@ class Message implements MessageInterface
      */
     public function getBody()
     {
-        // TODO: Implement getBody() method.
+        return $this->body;
     }
 
     /**
@@ -215,6 +265,16 @@ class Message implements MessageInterface
      */
     public function withBody(StreamInterface $body)
     {
-        // TODO: Implement withBody() method.
+        if (!($body instanceof StreamInterface)){
+            throw new \InvalidArgumentException('The body is not valid.');
+        }
+
+        if ($this->body === $body){
+            return $this;
+        }else{
+            $new = clone $this;
+            $new->body = $body;
+            return $new;
+        }
     }
 }
