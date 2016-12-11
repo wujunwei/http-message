@@ -19,10 +19,11 @@ class Message implements MessageInterface
     private $headers;
     private $body;
 
-    public function __construct(array $headers = [], $proVersion = '1.0')
+    public function __construct(array $headers = [], $proVersion = '1.0', StreamInterface $body)
     {
         $this->headers = $headers;
         $this->proVersion = $proVersion;
+        $this->body = $body;
     }
 
     /**

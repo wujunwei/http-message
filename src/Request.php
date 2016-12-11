@@ -15,6 +15,9 @@ use Psr\Http\Message\UriInterface;
 class Request extends Message implements RequestInterface
 {
 
+    private $method;
+    private $uri;
+    const validMethod = ['GET', 'POST', 'HEAD', 'PUT', 'DELETE', 'TRACE', 'OPTIONS', 'CONNECT'];
     /**
      * Retrieves the message's request target.
      *
@@ -65,7 +68,7 @@ class Request extends Message implements RequestInterface
      */
     public function getMethod()
     {
-        // TODO: Implement getMethod() method.
+        return $this->method;
     }
 
     /**
@@ -85,7 +88,16 @@ class Request extends Message implements RequestInterface
      */
     public function withMethod($method)
     {
-        // TODO: Implement withMethod() method.
+        if(!in_array($method, static::validMethod)){
+            throw new \InvalidArgumentException('Invalid HTTP methods.');
+        }
+        if ($this->method === $method){
+            return $this;
+        }else{
+            $new = clone $this;
+            $new->method = $method;
+            return $new;
+        }
     }
 
     /**
@@ -99,7 +111,7 @@ class Request extends Message implements RequestInterface
      */
     public function getUri()
     {
-        // TODO: Implement getUri() method.
+        return $this->uri;
     }
 
     /**
