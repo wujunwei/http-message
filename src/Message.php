@@ -14,6 +14,7 @@ use Psr\Http\Message\StreamInterface;
 
 class Message implements MessageInterface
 {
+    private $proVersion;
 
     /**
      * Retrieves the HTTP protocol version as a string.

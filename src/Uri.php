@@ -27,9 +27,32 @@ class Uri implements UriInterface
 
     /**
      * Uri constructor.
+     * @param string $uri
      */
-    public function __construct()
+    public function __construct($uri = '')
     {
+        if (is_string($uri) && $uri !== ''){
+            $pathInfo = parse_url($uri);
+            var_dump($pathInfo);
+            $this->host = isset($pathInfo['host'])? $pathInfo['host']: '';
+            if (!isset($pathInfo['scheme']) || key_exists(strtolower($pathInfo['scheme']), static::SUPPORT_PROTOCOL)){
+                $this->scheme = isset($pathInfo['scheme'])? strtolower($pathInfo['scheme']): '';
+            }else{
+                throw new \InvalidArgumentException('Invalid or unsupported schemes.');
+            }
+            $this->port =  isset($pathInfo['port'])? intval($pathInfo['port']): null;
+            if (isset($pathInfo['user'])){
+                $this->userInfo = $pathInfo['user'].(isset($pathInfo['pass']) ?  ':'.$pathInfo['pass']: '');
+            }else{
+                $this->userInfo = '';
+            }
+            $this->fragment = isset($pathInfo['fragment'])? $pathInfo['fragment']: '';
+            $this->query = isset($pathInfo['query'])? $pathInfo['query']: '';
+
+            $this->path = isset($pathInfo['path'])? $pathInfo['path']: '';
+            $this->authority = ($this->userInfo == ''? '': $this->userInfo.'@').$this->host.(isset($this->port)? ':'.$this->port: '');
+        }
+
 
     }
 
@@ -130,8 +153,10 @@ class Uri implements UriInterface
     {
         $port = isset($this->port)? (int)$this->port: null;
        if(isset($this->scheme) && static::SUPPORT_PROTOCOL[$this->scheme] == $port){
-           $port = null;
-       }
+           return null;
+       }else{
+           return $port;
+    }
     }
 
     /**
@@ -470,8 +495,6 @@ class Uri implements UriInterface
     /**
      * @param string $scheme
      * @param string $authority
-     * @param string $userInfo
-     * @param string $host
      * @param string $path
      * @param string $query
      * @param string $fragment

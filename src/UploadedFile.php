@@ -8,7 +8,6 @@
 
 namespace Http\Message;
 
-use Http\Message\Stream;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UploadedFileInterface;
 
