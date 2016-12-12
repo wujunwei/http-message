@@ -3,6 +3,7 @@
     "description": "Common tool for HTTP messages",
     "type": "library",
     "require-dev": {
+        "guzzlehttp/guzzle": "^6.2",
         "psr/http-message": "^1.0"
     },
     "license": "MIT",
