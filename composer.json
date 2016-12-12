@@ -2,7 +2,7 @@
     "name": "firstw/http-message",
     "description": "Common tool for HTTP messages",
     "type": "library",
-    "require-dev": {
+    "require": {
         "guzzlehttp/guzzle": "^6.2",
         "psr/http-message": "^1.0"
     },
@@ -18,6 +18,5 @@
             "Http\\Message\\": "src/"
         }
     },
-    "minimum-stability": "stable",
-    "require": {}
+    "minimum-stability": "stable"
 }
