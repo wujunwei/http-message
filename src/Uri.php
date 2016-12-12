@@ -33,7 +33,6 @@ class Uri implements UriInterface
     {
         if (is_string($uri) && $uri !== ''){
             $pathInfo = parse_url($uri);
-            var_dump($pathInfo);
             $this->host = isset($pathInfo['host'])? $pathInfo['host']: '';
             if (!isset($pathInfo['scheme']) || key_exists(strtolower($pathInfo['scheme']), static::SUPPORT_PROTOCOL)){
                 $this->scheme = isset($pathInfo['scheme'])? strtolower($pathInfo['scheme']): '';

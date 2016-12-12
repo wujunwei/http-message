@@ -10,14 +10,23 @@ namespace Http\Message;
 
 
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 
 class Request extends Message implements RequestInterface
 {
+    /** @var null|string */
+    protected $method;
+    /** @var null|UriInterface */
+    protected $uri;
+    protected $requestTarget;
+    protected static $validMethod = ['GET', 'POST', 'HEAD', 'PUT', 'DELETE', 'TRACE', 'OPTIONS', 'CONNECT'];
 
-    private $method;
-    private $uri;
-    const validMethod = ['GET', 'POST', 'HEAD', 'PUT', 'DELETE', 'TRACE', 'OPTIONS', 'CONNECT'];
+    public function __construct(array $headers = [], $proVersion = '1.1', StreamInterface $body = null)
+    {
+        parent::__construct($headers, $proVersion, $body);
+    }
+
     /**
      * Retrieves the message's request target.
      *
@@ -36,7 +45,19 @@ class Request extends Message implements RequestInterface
      */
     public function getRequestTarget()
     {
-        // TODO: Implement getRequestTarget() method.
+        if ($this->requestTarget !== null) {
+            return $this->requestTarget;
+        }
+
+        $target = $this->uri->getPath();
+        if ($target == '') {
+            $target = '/';
+        }
+        if ($this->uri->getQuery() != '') {
+            $target .= '?' . $this->uri->getQuery();
+        }
+
+        return $target;
     }
 
     /**
@@ -58,7 +79,15 @@ class Request extends Message implements RequestInterface
      */
     public function withRequestTarget($requestTarget)
     {
-        // TODO: Implement withRequestTarget() method.
+        if (preg_match('#\s#', $requestTarget)) {
+            throw new \InvalidArgumentException(
+                'Invalid request target provided; cannot contain whitespace'
+            );
+        }
+
+        $new = clone $this;
+        $new->requestTarget = $requestTarget;
+        return $new;
     }
 
     /**
@@ -88,7 +117,7 @@ class Request extends Message implements RequestInterface
      */
     public function withMethod($method)
     {
-        if(!in_array($method, static::validMethod)){
+        if(!in_array($method, self::$validMethod)){
             throw new \InvalidArgumentException('Invalid HTTP methods.');
         }
         if ($this->method === $method){
@@ -146,6 +175,22 @@ class Request extends Message implements RequestInterface
      */
     public function withUri(UriInterface $uri, $preserveHost = false)
     {
-        // TODO: Implement withUri() method.
+        $UriHost = $uri->getHost();
+        $host = $this->getHeader('Host');
+        if (in_array($UriHost, $host) && $this->headers['Host'] === $uri->getHost()){
+            return $this;
+        }
+        $new = clone $this;
+        if ($preserveHost){
+            $new->uri = $uri;
+            if(empty($new->headers['Host'])){
+                $new->headers['Host'] = [$uri->getHost()];
+            }
+            return $new;
+        }else{
+            $new->uri = $uri;
+            $new->headers['Host'] = [$uri->getHost()];
+            return $new;
+        }
     }
 }

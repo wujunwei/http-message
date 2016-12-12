@@ -15,11 +15,11 @@ use Psr\Http\Message\StreamInterface;
 
 class Message implements MessageInterface
 {
-    private $proVersion;
-    private $headers;
-    private $body;
+    protected $proVersion;
+    protected $headers;
+    protected $body;
 
-    public function __construct(array $headers = [], $proVersion = '1.0', StreamInterface $body)
+    public function __construct(array $headers = [], $proVersion = '1.1', StreamInterface $body = null)
     {
         $this->headers = $headers;
         $this->proVersion = $proVersion;
