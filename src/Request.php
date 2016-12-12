@@ -22,8 +22,13 @@ class Request extends Message implements RequestInterface
     protected $requestTarget;
     protected static $validMethod = ['GET', 'POST', 'HEAD', 'PUT', 'DELETE', 'TRACE', 'OPTIONS', 'CONNECT'];
 
-    public function __construct(array $headers = [], $proVersion = '1.1', StreamInterface $body = null)
+    public function __construct($method, $uri, array $headers = [], $proVersion = '1.1', StreamInterface $body = null)
     {
+        $this->method = $method;
+        if (is_string($uri)){
+            $uri = new Uri($uri);
+        }
+        $this->uri = $uri;
         parent::__construct($headers, $proVersion, $body);
     }
 
